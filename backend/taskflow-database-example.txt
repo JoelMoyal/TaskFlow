@@ -1,0 +1,242 @@
+// .env file (for environment variables)
+NODE_ENV=development
+PORT=5000
+MONGO_URI=mongodb://localhost:27017/taskflow
+JWT_SECRET=your_jwt_secret_key
+JWT_EXPIRE=30d
+EMAIL_SERVICE=gmail
+EMAIL_USERNAME=your-email@gmail.com
+EMAIL_PASSWORD=your-email-password
+EMAIL_FROM=noreply@taskflow.com
+
+// Example MongoDB setup script with initial data
+// This can be run to initialize your database with some sample data
+
+// config/db-init.js
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+const User = require('../models/User');
+const Category = require('../models/Category');
+const Task = require('../models/Task');
+
+// Connect to MongoDB
+const connectDB = async () => {
+  try {
+    const conn = await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/taskflow', {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+
+    console.log(`MongoDB Connected: ${conn.connection.host}`);
+    
+    // After connection, initialize the database
+    await initializeDatabase();
+    
+    console.log('Database initialized with sample data');
+    process.exit(0);
+  } catch (error) {
+    console.error(`Error: ${error.message}`);
+    process.exit(1);
+  }
+};
+
+const initializeDatabase = async () => {
+  try {
+    // Clear existing data
+    await User.deleteMany({});
+    await Category.deleteMany({});
+    await Task.deleteMany({});
+    
+    // Create a demo user
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash('password123', salt);
+    
+    const user = await User.create({
+      name: 'Demo User',
+      email: 'demo@example.com',
+      password: hashedPassword,
+      preferences: {
+        darkMode: false,
+        defaultView: 'list',
+        emailNotifications: true,
+      }
+    });
+    
+    console.log('Demo user created');
+    
+    // Create some categories
+    const workCategory = await Category.create({
+      name: 'Work',
+      color: '#3B82F6', // Blue
+      icon: 'briefcase',
+      user: user._id,
+    });
+    
+    const personalCategory = await Category.create({
+      name: 'Personal',
+      color: '#10B981', // Green
+      icon: 'user',
+      user: user._id,
+    });
+    
+    const studyCategory = await Category.create({
+      name: 'Study',
+      color: '#8B5CF6', // Purple
+      icon: 'book',
+      user: user._id,
+    });
+    
+    const healthCategory = await Category.create({
+      name: 'Health',
+      color: '#EF4444', // Red
+      icon: 'heart',
+      user: user._id,
+    });
+    
+    console.log('Categories created');
+    
+    // Create some tasks
+    const tasks = [
+      {
+        title: 'Complete TaskFlow project',
+        description: 'Finish the TaskFlow to-do application with all planned features.',
+        completed: false,
+        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+        priority: 'High',
+        category: workCategory._id,
+        status: 'In Progress',
+        position: 1,
+        user: user._id,
+      },
+      {
+        title: 'Weekly team meeting',
+        description: 'Attend the weekly team sync-up call to discuss project progress.',
+        completed: false,
+        dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), // 2 days from now
+        priority: 'Medium',
+        category: workCategory._id,
+        status: 'To Do',
+        position: 2,
+        user: user._id,
+      },
+      {
+        title: 'Grocery shopping',
+        description: 'Buy fruits, vegetables, milk, eggs, and bread.',
+        completed: false,
+        dueDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000), // 1 day from now
+        priority: 'Low',
+        category: personalCategory._id,
+        status: 'To Do',
+        position: 3,
+        user: user._id,
+      },
+      {
+        title: 'Morning workout',
+        description: '30 minutes of cardio and 15 minutes of strength training.',
+        completed: true,
+        dueDate: new Date(), // Today
+        priority: 'Medium',
+        category: healthCategory._id,
+        status: 'Completed',
+        position: 4,
+        user: user._id,
+      },
+      {
+        title: 'Study React hooks',
+        description: 'Learn about useState, useEffect, useContext, and custom hooks.',
+        completed: false,
+        dueDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000), // 4 days from now
+        priority: 'High',
+        category: studyCategory._id,
+        status: 'To Do',
+        position: 5,
+        user: user._id,
+      },
+      {
+        title: 'Doctor appointment',
+        description: 'Annual check-up at City Hospital.',
+        completed: false,
+        dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days from now
+        priority: 'Medium',
+        category: healthCategory._id,
+        status: 'To Do',
+        position: 6,
+        user: user._id,
+      },
+      {
+        title: 'Call parents',
+        description: 'Weekly catch-up call with parents.',
+        completed: false,
+        dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days from now
+        priority: 'Medium',
+        category: personalCategory._id,
+        status: 'To Do',
+        position: 7,
+        user: user._id,
+      },
+      {
+        title: 'Review pull requests',
+        description: 'Review and approve team pull requests for the new feature.',
+        completed: false,
+        dueDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000), // 1 day from now
+        priority: 'High',
+        category: workCategory._id,
+        status: 'To Do',
+        position: 8,
+        user: user._id,
+      },
+      {
+        title: 'Complete online course',
+        description: 'Finish the "Advanced JavaScript" course on Udemy.',
+        completed: false,
+        dueDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000), // 10 days from now
+        priority: 'Medium',
+        category: studyCategory._id,
+        status: 'In Progress',
+        position: 9,
+        user: user._id,
+      },
+      {
+        title: 'Pay utility bills',
+        description: 'Pay electricity, water, and internet bills.',
+        completed: true,
+        dueDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+        priority: 'Urgent',
+        category: personalCategory._id,
+        status: 'Completed',
+        position: 10,
+        user: user._id,
+      }
+    ];
+    
+    await Task.insertMany(tasks);
+    
+    console.log('Tasks created');
+    
+    // Create a recurring task
+    await Task.create({
+      title: 'Weekly review',
+      description: 'Review progress and plan for the next week.',
+      completed: false,
+      dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+      priority: 'High',
+      category: workCategory._id,
+      status: 'To Do',
+      position: 11,
+      user: user._id,
+      recurring: {
+        isRecurring: true,
+        frequency: 'weekly',
+        endDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days from now
+      }
+    });
+    
+    console.log('Recurring task created');
+    
+  } catch (error) {
+    console.error(`Error initializing database: ${error.message}`);
+  }
+};
+
+// Run the script
+connectDB();
